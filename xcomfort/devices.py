@@ -1,6 +1,6 @@
 from contextlib import nullcontext
 import rx
-from .messages import Messages, ShadeOperationState
+from .constants import Messages, ShadeOperationState
 
 class DeviceState:
     def __init__(self, payload):

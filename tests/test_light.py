@@ -3,7 +3,7 @@ from mock import patch, Mock
 import json
 from xcomfort.bridge import Bridge
 from xcomfort.devices import (Light, LightState)
-from xcomfort.messages import Messages
+from xcomfort.constants import Messages
 
 
 class MockBridge(Bridge):

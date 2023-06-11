@@ -6,7 +6,7 @@ import secrets
 import time
 import rx
 from enum import IntEnum
-from .messages import Messages
+from .constants import Messages
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, PKCS1_v1_5, AES

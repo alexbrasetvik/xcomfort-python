@@ -7,7 +7,7 @@ import rx
 import rx.operators as ops
 from enum import Enum
 from .connection import SecureBridgeConnection, setup_secure_connection
-from .messages import Messages
+from .constants import Messages
 from .devices import (BridgeDevice, Light, RcTouch, Heater, Shade)
 from .room import Room, RoomState, RctMode, RctState, RctModeRange
 from .comp import Comp, CompState
