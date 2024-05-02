@@ -1,9 +1,10 @@
+from typing import Optional
 import aiohttp
 import asyncio
 from enum import Enum
 from .connection import SecureBridgeConnection, setup_secure_connection
-from .constants import DeviceTypes, Messages
-from .devices import (BridgeDevice, Light, RcTouch, Heater, Shade)
+from .constants import ComponentTypes, DeviceTypes, Messages
+from .devices import (BridgeDevice, DoorSensor, Light, RcTouch, Heater, Shade, WindowSensor)
 # Some HA code relies on bridge having imported these:
 from .room import Room, RoomState, RctMode, RctState, RctModeRange # noqa
 from .comp import Comp, CompState # noqa
@@ -140,6 +141,13 @@ class Bridge:
 
         elif dev_type == DeviceTypes.RC_TOUCH:
             return RcTouch(self, device_id, name, comp_id)
+
+        elif dev_type == DeviceTypes.SWITCH:
+            component: Optional[Comp] = self._comps.get(comp_id)
+            if component and component.comp_type == ComponentTypes.DOOR_WINDOW_SENSOR:
+                if component.payload.get("mode") == "1310":
+                    return DoorSensor(self, device_id, name, comp_id, payload)
+                return WindowSensor(self, device_id, name, comp_id, payload)
 
         return BridgeDevice(self, device_id, name)
 

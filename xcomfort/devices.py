@@ -1,4 +1,5 @@
-from contextlib import nullcontext
+from typing import Optional
+
 import rx
 from .constants import Messages, ShadeOperationState
 
@@ -200,3 +201,28 @@ class Shade(BridgeDevice):
 
     def __str__(self) -> str:
         return f"<Shade device_id={self.device_id} name={self.name} state={self.state} supports_go_to={self.supports_go_to}>"
+
+
+class DoorWindowSensor(BridgeDevice):
+    def __init__(self, bridge, device_id, name, comp_id, payload):
+        BridgeDevice.__init__(self, bridge, device_id, name)
+
+        self.comp_id = comp_id
+        self.payload = payload
+        self.is_open: Optional[bool] = None
+        self.is_closed: Optional[bool] = None
+
+    def handle_state(self, payload):
+        if (state := payload.get("curstate")) is not None:
+            self.is_closed = state == 1
+            self.is_open = not self.is_closed
+
+        self.state.on_next(self.is_closed)
+
+
+class WindowSensor(DoorWindowSensor):
+    pass
+
+
+class DoorSensor(DoorWindowSensor):
+    pass
