@@ -1,6 +1,7 @@
 from enum import IntEnum
 
-class Messages(IntEnum):    
+
+class Messages(IntEnum):
     NACK = 0
     ACK = 1
     HEARTBEAT = 2
@@ -98,6 +99,7 @@ class Messages(IntEnum):
     NACK_INFO_INVALID_ACTION = -98
     NACK_INFO_DEVICE_NOT_DIMMABLE = -99
     NACK_INFO_UNKNOWN_DEVICE = -100
+
 
 class ShadeOperationState(IntEnum):
     OPEN = 0

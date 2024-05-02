@@ -4,16 +4,28 @@ import asyncio
 from enum import Enum
 from .connection import SecureBridgeConnection, setup_secure_connection
 from .constants import ComponentTypes, DeviceTypes, Messages
-from .devices import (BridgeDevice, DoorSensor, Light, RcTouch, Heater, Rocker, Shade, WindowSensor)
+from .devices import (
+    BridgeDevice,
+    DoorSensor,
+    Light,
+    RcTouch,
+    Heater,
+    Rocker,
+    Shade,
+    WindowSensor,
+)
+
 # Some HA code relies on bridge having imported these:
-from .room import Room, RoomState, RctMode, RctState, RctModeRange # noqa
-from .comp import Comp, CompState # noqa
+from .room import Room, RoomState, RctMode, RctState, RctModeRange  # noqa
+from .comp import Comp, CompState  # noqa
+
 
 class State(Enum):
     Uninitialized = 0
     Initializing = 1
     Ready = 2
     Closing = 10
+
 
 class Bridge:
     def __init__(self, ip_address: str, authkey: str, session=None):
@@ -30,11 +42,13 @@ class Bridge:
         self._closeSession = closeSession
 
         # Values determined from using setpoint slider in app.
-        self.rctsetpointallowedvalues = dict({
-            RctMode.Cool: RctModeRange(5.0,20.0),
-            RctMode.Eco: RctModeRange(10.0,30.0),
-            RctMode.Comfort: RctModeRange(18.0,40.0)
-        })
+        self.rctsetpointallowedvalues = dict(
+            {
+                RctMode.Cool: RctModeRange(5.0, 20.0),
+                RctMode.Eco: RctModeRange(10.0, 30.0),
+                RctMode.Comfort: RctModeRange(18.0, 40.0),
+            }
+        )
         self._comps = {}
         self._devices = {}
         self._rooms = {}
@@ -51,7 +65,7 @@ class Bridge:
 
         while self.state != State.Closing:
             try:
-                #self.logger(f"Connecting...")
+                # self.logger(f"Connecting...")
                 await self._connect()
                 await self.connection.pump()
 
@@ -88,26 +102,26 @@ class Bridge:
 
     def _handle_SET_DEVICE_STATE(self, payload):
         try:
-            device = self._devices[payload['deviceId']]
+            device = self._devices[payload["deviceId"]]
 
             device.handle_state(payload)
         except KeyError:
             return
 
     def _handle_SET_STATE_INFO(self, payload):
-        for item in payload['item']:
-            if 'deviceId' in item:
-                deviceId = item['deviceId']
+        for item in payload["item"]:
+            if "deviceId" in item:
+                deviceId = item["deviceId"]
                 device = self._devices[deviceId]
                 device.handle_state(item)
 
-            elif 'roomId' in item:
-                roomId = item['roomId']
+            elif "roomId" in item:
+                roomId = item["roomId"]
                 room = self._rooms[roomId]
                 room.handle_state(item)
 
-            elif 'compId' in item:
-                compId = item['compId']
+            elif "compId" in item:
+                compId = item["compId"]
                 comp = self._comps[compId]
                 comp.handle_state(item)
 
@@ -115,15 +129,15 @@ class Bridge:
                 self.logger(f"Unknown state info: {payload}")
 
     def _create_comp_from_payload(self, payload):
-        comp_id = payload['compId']
-        name = payload['name']
+        comp_id = payload["compId"]
+        name = payload["name"]
         comp_type = payload["compType"]
 
         return Comp(self, comp_id, comp_type, name, payload)
 
     def _create_device_from_payload(self, payload):
-        device_id = payload['deviceId']
-        name = payload['name']
+        device_id = payload["deviceId"]
+        name = payload["name"]
         dev_type = payload["devType"]
         comp_id = payload["compId"]
         if dev_type in (DeviceTypes.ACTUATOR_SWITCH, DeviceTypes.ACTUATOR_DIMM):
@@ -157,13 +171,13 @@ class Bridge:
         return BridgeDevice(self, device_id, name)
 
     def _create_room_from_payload(self, payload):
-        room_id = payload['roomId']
-        name = payload['name']
+        room_id = payload["roomId"]
+        name = payload["name"]
 
         return Room(self, room_id, name)
 
     def _handle_comp_payload(self, payload):
-        comp_id = payload['compId']
+        comp_id = payload["compId"]
 
         comp = self._comps.get(comp_id)
 
@@ -178,7 +192,7 @@ class Bridge:
         comp.handle_state(payload)
 
     def _handle_device_payload(self, payload):
-        device_id = payload['deviceId']
+        device_id = payload["deviceId"]
 
         device = self._devices.get(device_id)
 
@@ -193,7 +207,7 @@ class Bridge:
         device.handle_state(payload)
 
     def _handle_room_payload(self, payload):
-        room_id = payload['roomId']
+        room_id = payload["roomId"]
 
         room = self._rooms.get(room_id)
 
@@ -208,31 +222,31 @@ class Bridge:
         room.handle_state(payload)
 
     def _handle_SET_ALL_DATA(self, payload):
-        if 'lastItem' in payload:
+        if "lastItem" in payload:
             self.state = State.Ready
 
-        if 'devices' in payload:
-            for device_payload in payload['devices']:
+        if "devices" in payload:
+            for device_payload in payload["devices"]:
                 try:
                     self._handle_device_payload(device_payload)
                 except Exception as e:
                     self.logger(f"Failed to handle device payload: {str(e)}")
 
-        if 'comps' in payload:
+        if "comps" in payload:
             for comp_payload in payload["comps"]:
                 try:
                     self._handle_comp_payload(comp_payload)
                 except Exception as e:
                     self.logger(f"Failed to handle comp payload: {str(e)}")
 
-        if 'rooms' in payload:
+        if "rooms" in payload:
             for room_payload in payload["rooms"]:
                 try:
                     self._handle_room_payload(room_payload)
                 except Exception as e:
                     self.logger(f"Failed to handle room payload: {str(e)}")
 
-        if 'roomHeating' in payload:
+        if "roomHeating" in payload:
             for room_payload in payload["roomHeating"]:
                 try:
                     self._handle_room_payload(room_payload)
@@ -244,25 +258,28 @@ class Bridge:
         pass
 
     def _onMessage(self, message):
-
-        if 'payload' in message:
+        if "payload" in message:
             # self.logger(f"Message: {message}")
-            message_type = Messages(message['type_int'])
-            method_name = '_handle_' + message_type.name
+            message_type = Messages(message["type_int"])
+            method_name = "_handle_" + message_type.name
 
-            method = getattr(self, method_name,
-                             lambda p: self._handle_UNKNOWN(message_type, p))
+            method = getattr(
+                self, method_name, lambda p: self._handle_UNKNOWN(message_type, p)
+            )
             try:
-                method(message['payload'])
+                method(message["payload"])
             except Exception as e:
                 self.logger(f"Unknown error with: {method_name}: {str(e)}")
         else:
             self.logger(f"Not known: {message}")
 
     async def _connect(self):
-        self.connection = await setup_secure_connection(self._session, self.ip_address, self.authkey)
+        self.connection = await setup_secure_connection(
+            self._session, self.ip_address, self.authkey
+        )
         self.connection_subscription = self.connection.messages.subscribe(
-            self._onMessage)
+            self._onMessage
+        )
 
     async def close(self):
         self.state = State.Closing

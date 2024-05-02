@@ -1,5 +1,6 @@
 import rx
 
+
 class CompState:
     def __init__(self, raw):
         self.raw = raw
@@ -8,6 +9,7 @@ class CompState:
         return f"CompState({self.raw})"
 
     __repr__ = __str__
+
 
 class Comp:
     def __init__(self, bridge, comp_id, comp_type, name: str, payload: dict):
