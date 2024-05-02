@@ -131,8 +131,11 @@ class Bridge:
         dev_type = payload["devType"]
         comp_id = payload["compId"]
         if dev_type in (DeviceTypes.ACTUATOR_SWITCH, DeviceTypes.ACTUATOR_DIMM):
-            dimmable = payload['dimmable']
-            return Light(self, device_id, name, dimmable)
+            if payload.get("usage") == 0:
+                # If usage = 1 then it's configured as a "load",
+                # and not as a light.
+                dimmable = payload["dimmable"]
+                return Light(self, device_id, name, dimmable)
 
         elif dev_type == DeviceTypes.SHADING_ACTUATOR:
             return Shade(self, device_id, name, comp_id, payload)
