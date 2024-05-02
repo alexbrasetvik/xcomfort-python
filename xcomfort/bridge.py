@@ -7,7 +7,7 @@ import rx
 import rx.operators as ops
 from enum import Enum
 from .connection import SecureBridgeConnection, setup_secure_connection
-from .constants import Messages
+from .constants import DeviceTypes, Messages
 from .devices import (BridgeDevice, Light, RcTouch, Heater, Shade)
 from .room import Room, RoomState, RctMode, RctState, RctModeRange
 from .comp import Comp, CompState
@@ -130,18 +130,17 @@ class Bridge:
         name = payload['name']
         dev_type = payload["devType"]
         comp_id = payload["compId"]
-
-        if dev_type == 100 or dev_type == 101:
+        if dev_type in (DeviceTypes.ACTUATOR_SWITCH, DeviceTypes.ACTUATOR_DIMM):
             dimmable = payload['dimmable']
             return Light(self, device_id, name, dimmable)
 
-        if dev_type == 102:
+        elif dev_type == DeviceTypes.SHADING_ACTUATOR:
             return Shade(self, device_id, name, comp_id, payload)
 
-        if dev_type == 440:
+        elif dev_type == DeviceTypes.HEATING_ACTUATOR:
             return Heater(self, device_id, name, comp_id)
 
-        if dev_type == 450:
+        elif dev_type == DeviceTypes.RC_TOUCH:
             return RcTouch(self, device_id, name, comp_id)
 
         return BridgeDevice(self, device_id, name)
