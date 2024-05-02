@@ -21,7 +21,7 @@ class RctState(Enum):
     Active = 2
 
 class RctModeRange:
-    def __init__(self, min:float, max:float):
+    def __init__(self, min: float, max: float):  # noqa: A002
         self.Min = min
         self.Max = max
 

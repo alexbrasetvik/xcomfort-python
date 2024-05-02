@@ -27,7 +27,7 @@ def generateSalt():
     return ''.join(secrets.choice(alphabet) for i in range(12))
 
 
-def hash(deviceId, authKey, salt):
+def hash(deviceId, authKey, salt):  # noqa: A001 - builtin shadow
     hasher = SHA256.new()
     hasher.update(deviceId)
     hasher.update(authKey)
