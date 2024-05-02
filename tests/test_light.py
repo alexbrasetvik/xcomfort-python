@@ -2,7 +2,7 @@ import pytest
 from mock import patch, Mock
 import json
 from xcomfort.bridge import Bridge
-from xcomfort.devices import (Light, LightState)
+from xcomfort.devices import Light, LightState
 from xcomfort.constants import Messages
 
 
@@ -27,10 +27,7 @@ async def test_light_switch_on():
 def test_lightstate_switch_on():
     device = Light(None, 1, "", True)
 
-    payload = {
-        "switch": True,
-        "dimmvalue": 50
-    }
+    payload = {"switch": True, "dimmvalue": 50}
 
     device.handle_state(payload)
 
@@ -41,9 +38,7 @@ def test_lightstate_switch_on():
 def test_lightstate_switch_on_when_not_dimmable():
     device = Light(None, 1, "", False)
 
-    payload = {
-        "switch": True
-    }
+    payload = {"switch": True}
 
     device.handle_state(payload)
 

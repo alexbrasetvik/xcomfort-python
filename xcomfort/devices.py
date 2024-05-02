@@ -3,12 +3,14 @@ from typing import Optional
 import rx
 from .constants import Messages, ShadeOperationState
 
+
 class DeviceState:
     def __init__(self, payload):
         self.raw = payload
 
     def __str__(self):
         return f"DeviceState({self.raw})"
+
 
 class LightState(DeviceState):
     def __init__(self, switch, dimmvalue, payload):
@@ -21,6 +23,7 @@ class LightState(DeviceState):
 
     __repr__ = __str__
 
+
 class RcTouchState(DeviceState):
     def __init__(self, temperature, humidity, payload):
         DeviceState.__init__(self, payload)
@@ -31,6 +34,7 @@ class RcTouchState(DeviceState):
         return f"RcTouchState({self.temperature}, {self.humidity})"
 
     __repr__ = __str__
+
 
 class HeaterState(DeviceState):
     def __init__(self, payload):
@@ -43,7 +47,6 @@ class HeaterState(DeviceState):
 
 
 class ShadeState(DeviceState):
-
     def __init__(self):
         self.raw = {}
         self.current_state: int | None = None
@@ -74,6 +77,7 @@ class ShadeState(DeviceState):
     def __str__(self) -> str:
         return f"ShadeState(current_state={self.current_state} is_safety_enabled={self.is_safety_enabled} position={self.position} raw={self.raw})"
 
+
 class BridgeDevice:
     def __init__(self, bridge, device_id, name):
         self.bridge = bridge
@@ -98,12 +102,11 @@ class Light(BridgeDevice):
 
         if not switch:
             return self.state.value.dimmvalue if self.state.value is not None else 99
-        
-        return payload['dimmvalue']
 
+        return payload["dimmvalue"]
 
     def handle_state(self, payload):
-        switch = payload['switch']
+        switch = payload["switch"]
         dimmvalue = self.interpret_dimmvalue_from_payload(switch, payload)
 
         self.state.on_next(LightState(switch, dimmvalue, payload))
@@ -116,7 +119,7 @@ class Light(BridgeDevice):
         await self.bridge.slide_device(self.device_id, {"dimmvalue": value})
 
     def __str__(self):
-        return f"Light({self.device_id}, \"{self.name}\", dimmable: {self.dimmable}, state:{self.state.value})"
+        return f'Light({self.device_id}, "{self.name}", dimmable: {self.dimmable}, state:{self.state.value})'
 
     __repr__ = __str__
 
@@ -131,12 +134,12 @@ class RcTouch(BridgeDevice):
         print(f"RcTouchState::: {payload}")
         temperature = None
         humidity = None
-        if 'info' in payload:
-            for info in payload['info']:
-                if info['text'] == "1222":
-                    temperature = float(info['value'])
-                if info['text'] == "1223":
-                    humidity = float(info['value'])
+        if "info" in payload:
+            for info in payload["info"]:
+                if info["text"] == "1222":
+                    temperature = float(info["value"])
+                if info["text"] == "1223":
+                    humidity = float(info["value"])
 
         if temperature is not None and humidity is not None:
             self.state.on_next(RcTouchState(temperature, humidity, payload))
@@ -147,6 +150,7 @@ class Heater(BridgeDevice):
         BridgeDevice.__init__(self, bridge, device_id, name)
 
         self.comp_id = comp_id
+
 
 class Shade(BridgeDevice):
     def __init__(self, bridge, device_id, name, comp_id, payload):
@@ -180,7 +184,8 @@ class Shade(BridgeDevice):
             return
 
         await self.bridge.send_message(
-            Messages.SET_DEVICE_SHADING_STATE, {"deviceId": self.device_id, "state": state, **kw}
+            Messages.SET_DEVICE_SHADING_STATE,
+            {"deviceId": self.device_id, "state": state, **kw},
         )
 
     async def move_down(self):

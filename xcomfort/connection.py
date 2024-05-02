@@ -24,7 +24,7 @@ class ConnectionState(IntEnum):
 
 def generateSalt():
     alphabet = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(alphabet) for i in range(12))
+    return "".join(secrets.choice(alphabet) for i in range(12))
 
 
 def hash(deviceId, authKey, salt):  # noqa: A001 - builtin shadow
@@ -42,7 +42,7 @@ def hash(deviceId, authKey, salt):  # noqa: A001 - builtin shadow
 def _pad_string(value):
     length = len(value)
     pad_size = AES.block_size - (length % AES.block_size)
-    return value.ljust(length + pad_size, b'\x00')
+    return value.ljust(length + pad_size, b"\x00")
 
 
 async def setup_secure_connection(session, ip_address, authkey):
@@ -62,33 +62,36 @@ async def setup_secure_connection(session, ip_address, authkey):
     try:
         msg = await __receive(ws)
 
-        #{'type_int': 0, 'ref': -1, 'info': 'no client-connection available (all used)!'}
-        if msg['type_int'] == Messages.NACK:
+        # {'type_int': 0, 'ref': -1, 'info': 'no client-connection available (all used)!'}
+        if msg["type_int"] == Messages.NACK:
             raise Exception(msg["info"])
 
-        deviceId = msg['payload']['device_id']
-        connectionId = msg['payload']['connection_id']
+        deviceId = msg["payload"]["device_id"]
+        connectionId = msg["payload"]["connection_id"]
 
-        await __send(ws, {
-            "type_int": 11,
-            "mc": -1,
-            "payload": {
-                "client_type": "shl-app",
-                "client_id": "c956e43f999f8004",
-                "client_version": "3.0.0",
-                "connection_id": connectionId
-            }
-        })
+        await __send(
+            ws,
+            {
+                "type_int": 11,
+                "mc": -1,
+                "payload": {
+                    "client_type": "shl-app",
+                    "client_id": "c956e43f999f8004",
+                    "client_version": "3.0.0",
+                    "connection_id": connectionId,
+                },
+            },
+        )
 
         msg = await __receive(ws)
 
-        if msg['type_int'] == Messages.CONNECTION_DECLINED:
+        if msg["type_int"] == Messages.CONNECTION_DECLINED:
             raise Exception(msg["payload"]["error_message"])
 
         await __send(ws, {"type_int": 14, "mc": -1})
 
         msg = await __receive(ws)
-        publicKey = msg['payload']['public_key']
+        publicKey = msg["payload"]["public_key"]
 
         rsa = RSA.import_key(publicKey)
 
@@ -96,8 +99,7 @@ async def setup_secure_connection(session, ip_address, authkey):
         iv = get_random_bytes(16)
 
         cipher = PKCS1_v1_5.new(rsa)
-        secret = b64encode(cipher.encrypt(
-            (key.hex() + ":::" + iv.hex()).encode()))
+        secret = b64encode(cipher.encrypt((key.hex() + ":::" + iv.hex()).encode()))
         # print(f"secret: {secret}")
         secret = secret.decode()
         # print(f"secret: {secret}")
@@ -110,24 +112,22 @@ async def setup_secure_connection(session, ip_address, authkey):
 
         msg = await connection.receive()
 
-        if msg['type_int'] != 17:
-            raise Exception('Failed to establish secure connection')
+        if msg["type_int"] != 17:
+            raise Exception("Failed to establish secure connection")
 
         salt = generateSalt()
         password = hash(deviceId.encode(), authkey.encode(), salt.encode())
 
-        await connection.send_message(30, {
-            "username": "default",
-            "password": password,
-            "salt": salt
-        })
+        await connection.send_message(
+            30, {"username": "default", "password": password, "salt": salt}
+        )
 
         msg = await connection.receive()
 
-        if msg['type_int'] != 32:
+        if msg["type_int"] != 32:
             raise Exception("Login failed")
 
-        token = msg['payload']['token']
+        token = msg["payload"]["token"]
         await connection.send_message(33, {"token": token})
 
         # {"type_int":34,"mc":-1,"payload":{"valid":true,"remaining":8640000}}
@@ -138,10 +138,10 @@ async def setup_secure_connection(session, ip_address, authkey):
 
         msg = await connection.receive()
 
-        if msg['type_int'] != 38:
+        if msg["type_int"] != 38:
             raise Exception("Login failed")
 
-        token = msg['payload']['token']
+        token = msg["payload"]["token"]
 
         await connection.send_message(33, {"token": token})
 
@@ -165,9 +165,7 @@ class SecureBridgeConnection:
         self._messageSubject = rx.subject.Subject()
         self.mc = 0
 
-        self.messages = self._messageSubject.pipe(
-            ops.as_observable()
-        )
+        self.messages = self._messageSubject.pipe(ops.as_observable())
 
     def __cipher(self):
         return AES.new(self.key, AES.MODE_CBC, self.iv)
@@ -175,7 +173,7 @@ class SecureBridgeConnection:
     def __decrypt(self, data):
         ct = b64decode(data)
         data = self.__cipher().decrypt(ct)
-        data = data.rstrip(b'\x00')
+        data = data.rstrip(b"\x00")
         # print(f"Received decrypted: {data}")
 
         if not data:
@@ -194,11 +192,11 @@ class SecureBridgeConnection:
             if msg.type == aiohttp.WSMsgType.TEXT:
                 result = self.__decrypt(msg.data)
 
-                if 'mc' in result:
+                if "mc" in result:
                     # ACK
-                    await self.send({"type_int": 1, "ref": result['mc']})
+                    await self.send({"type_int": 1, "ref": result["mc"]})
 
-                if 'payload' in result:
+                if "payload" in result:
                     self._messageSubject.on_next(result)
 
             elif msg.type == aiohttp.WSMsgType.ERROR:
@@ -225,5 +223,5 @@ class SecureBridgeConnection:
         # print(f"Send raw: {msg}")
         msg = _pad_string(msg.encode())
         msg = self.__cipher().encrypt(msg)
-        msg = b64encode(msg).decode() + '\u0004'
+        msg = b64encode(msg).decode() + "\u0004"
         await self.websocket.send_str(msg)
