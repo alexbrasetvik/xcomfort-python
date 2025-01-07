@@ -53,6 +53,7 @@ class Bridge:
         self._devices = {}
         self._rooms = {}
         self.state = State.Uninitialized
+        self.on_initialized = asyncio.Event()
         self.connection = None
         self.connection_subscription = None
         self.logger = lambda x: None
@@ -224,6 +225,7 @@ class Bridge:
     def _handle_SET_ALL_DATA(self, payload):
         if "lastItem" in payload:
             self.state = State.Ready
+            self.on_initialized.set()
 
         if "devices" in payload:
             for device_payload in payload["devices"]:
@@ -259,7 +261,6 @@ class Bridge:
 
     def _onMessage(self, message):
         if "payload" in message:
-            # self.logger(f"Message: {message}")
             message_type = Messages(message["type_int"])
             method_name = "_handle_" + message_type.name
 
@@ -277,6 +278,7 @@ class Bridge:
 
     async def close(self):
         self.state = State.Closing
+        self.on_initialized.clear()
 
         if isinstance(self.connection, SecureBridgeConnection):
             self.connection_subscription.dispose()
@@ -286,13 +288,7 @@ class Bridge:
             await self._session.close()
 
     async def wait_for_initialization(self):
-        if self.state == State.Uninitialized:
-            await asyncio.sleep(0.1)
-
-        while self.state == State.Initializing:
-            await asyncio.sleep(0.1)
-
-        return
+        return await self.on_initialized.wait()
 
     async def get_comps(self):
         await self.wait_for_initialization()
