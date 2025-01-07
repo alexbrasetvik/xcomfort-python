@@ -1,23 +1,25 @@
-from typing import Optional
-import aiohttp
 import asyncio
 from enum import Enum
+from typing import Optional
+
+import aiohttp
+
+from .comp import Comp, CompState  # noqa
 from .connection import SecureBridgeConnection, setup_secure_connection
 from .constants import ComponentTypes, DeviceTypes, Messages
 from .devices import (
     BridgeDevice,
     DoorSensor,
+    Heater,
     Light,
     RcTouch,
-    Heater,
     Rocker,
     Shade,
     WindowSensor,
 )
 
 # Some HA code relies on bridge having imported these:
-from .room import Room, RoomState, RctMode, RctState, RctModeRange  # noqa
-from .comp import Comp, CompState  # noqa
+from .room import RctMode, RctModeRange, RctState, Room, RoomState  # noqa
 
 
 class State(Enum):

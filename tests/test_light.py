@@ -1,9 +1,6 @@
 import pytest
-from mock import patch, Mock
-import json
 from xcomfort.bridge import Bridge
-from xcomfort.devices import Light, LightState
-from xcomfort.constants import Messages
+from xcomfort.devices import Light
 
 
 class MockBridge(Bridge):
@@ -31,7 +28,7 @@ def test_lightstate_switch_on():
 
     device.handle_state(payload)
 
-    assert device.state.value.switch == True
+    assert device.state.value.switch is True
     assert device.state.value.dimmvalue == 50
 
 
@@ -42,4 +39,4 @@ def test_lightstate_switch_on_when_not_dimmable():
 
     device.handle_state(payload)
 
-    assert device.state.value.switch == True
+    assert device.state.value.switch is True
