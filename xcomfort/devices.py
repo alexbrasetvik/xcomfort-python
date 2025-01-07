@@ -131,7 +131,6 @@ class RcTouch(BridgeDevice):
         self.comp_id = comp_id
 
     def handle_state(self, payload):
-        print(f"RcTouchState::: {payload}")
         temperature = None
         humidity = None
         if "info" in payload:

@@ -57,8 +57,6 @@ class Room:
         self.modesetpoints = dict()
 
     def handle_state(self, payload):
-        print(f"Room.handle_state: {payload}")
-
         old_state = self.state.value
 
         if old_state is not None:
